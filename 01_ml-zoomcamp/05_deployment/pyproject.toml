@@ -1,0 +1,11 @@
+[project]
+name = "telco-churn-deployment"
+version = "0.1.0"
+description = "Telco churn prediction API"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi[standard]>=0.136.3",
+    "numpy>=2.4.4",
+    "pandas>=3.0.3",
+    "scikit-learn>=1.8.0",
+]

@@ -51,6 +51,7 @@ dependencies = [
     { name = "ddgs" },
     { name = "duckduckgo-search" },
     { name = "fastai" },
+    { name = "fastapi" },
     { name = "fastdownload" },
     { name = "ipykernel" },
     { name = "jupyter" },
@@ -71,6 +72,7 @@ requires-dist = [
     { name = "ddgs", specifier = ">=9.14.4" },
     { name = "duckduckgo-search", specifier = ">=8.1.1" },
     { name = "fastai", specifier = ">=2.8.7" },
+    { name = "fastapi", specifier = ">=0.136.3" },
     { name = "fastdownload", specifier = ">=0.0.7" },
     { name = "ipykernel", specifier = ">=7.2.0" },
     { name = "jupyter", specifier = ">=1.1.1" },
@@ -893,6 +895,22 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/f9/08/d54365d18d797c583599387af0b21b5e50d377a357a0d871195fbb84d271/fastai-2.8.7.tar.gz", hash = "sha256:93be109daab077a73279bb2aba27fa72a206bbf055b0f1921475afde69b7705f", size = 221121, upload-time = "2026-02-14T02:00:55.745Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/49/92/9429cce6bd4048cec9e4c2458c6bdb56144327afe1e7f29341f807d97dca/fastai-2.8.7-py3-none-any.whl", hash = "sha256:840145fe563bed47d35fb5da47121f9749b9ae7deca1a7f31189b045a6a72d9d", size = 240697, upload-time = "2026-02-14T02:00:54.036Z" },
+]
+
+[[package]]
+name = "fastapi"
+version = "0.136.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "annotated-doc" },
+    { name = "pydantic" },
+    { name = "starlette" },
+    { name = "typing-extensions" },
+    { name = "typing-inspection" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/81/2d/ff8d91d7b564d464629a0fd50a4489c97fcb836ac230bf3a7269232a9b1f/fastapi-0.136.3.tar.gz", hash = "sha256:e487fae93ad408e6f47641ee4dfe389864fd7bec92e547ea8498fc13f43e83ab", size = 396410, upload-time = "2026-05-23T18:53:15.192Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e0/82/45359b62a067409bd929ae8a56b8ed13e5a8c8a61194b3c236920999ab83/fastapi-0.136.3-py3-none-any.whl", hash = "sha256:3d2a69bdf04b7e9f3afa292c3bc7a98816bbfafa10bc9b45f3f3700d2f761620", size = 117481, upload-time = "2026-05-23T18:53:16.924Z" },
 ]
 
 [[package]]

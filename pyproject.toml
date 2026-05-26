@@ -9,6 +9,7 @@ dependencies = [
     "ddgs>=9.14.4",
     "duckduckgo-search>=8.1.1",
     "fastai>=2.8.7",
+    "fastapi>=0.136.3",
     "fastdownload>=0.0.7",
     "ipykernel>=7.2.0",
     "jupyter>=1.1.1",
