@@ -22,12 +22,12 @@ env/
 *.ipynb_checkpoints
 
 # Data files
-*.csv
-*.parquet
-*.json
-*.sqlite
-*.db
-data/
+#*.csv
+#*.parquet
+#*.json
+#*.sqlite
+#*.db
+#data/
 
 # Scrapy
 .scrapy/
