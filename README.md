@@ -1,12 +1,17 @@
-# Applied Data Science
+# ML Zoomcamp
 
-A hands-on reference project covering applied data science techniques with Python.
+Hands-on machine learning reference notebooks and deployment examples following the [ML Zoomcamp](https://github.com/DataTalksClub/machine-learning-zoomcamp) curriculum.
 
-## Topics
+## Structure
 
-| Notebook | Description |
+| Module | Topic |
 |---|---|
-| `01_scraping.ipynb` | Web scraping with BeautifulSoup and Scrapy |
+| `01_intro/` | NumPy, Linear Algebra, Pandas |
+| `02_car-price/` | Regression — Car Price Prediction |
+| `03_telco-churn/` | Classification — Telco Churn |
+| `04_evalutation/` | Model Evaluation Metrics |
+| `05_deployment/` | Model Deployment (FastAPI, Docker, AWS Lambda) |
+| `06_credit-risk/` | Credit Risk Scoring |
 
 ## Setup
 
@@ -16,16 +21,17 @@ This project uses [uv](https://docs.astral.sh/uv/) for dependency management.
 uv sync
 ```
 
-Then open any notebook with Jupyter:
+Open any notebook with Jupyter:
 
 ```bash
 uv run jupyter notebook
 ```
 
-## Dependencies
+## Deployment module
 
-- `beautifulsoup4` — HTML parsing
-- `scrapy` — full-featured web crawling
-- `pandas` — data manipulation
-- `spacy` — NLP
-- `nest-asyncio` — allows Scrapy to run inside Jupyter's event loop
+The `05_deployment/` folder is a self-contained FastAPI service with its own `pyproject.toml`. Run it with:
+
+```bash
+cd 05_deployment
+uv run uvicorn app:app --reload
+```

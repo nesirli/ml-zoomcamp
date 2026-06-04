@@ -1,29 +1,20 @@
 [project]
-name = "applied-data"
+name = "ml-zoomcamp"
 version = "0.1.0"
-description = "This repo is for applied data science reference."
+description = "ML Zoomcamp — hands-on machine learning reference notebooks and deployment examples."
 readme = "README.md"
-requires-python = ">=3.13"
 dependencies = [
-    "beautifulsoup4>=4.14.3",
-    "ddgs>=9.14.4",
-    "duckduckgo-search>=8.1.1",
-    "fastai>=2.8.7",
     "fastapi>=0.136.3",
-    "fastdownload>=0.0.7",
     "graphviz>=0.21",
     "ipykernel>=7.2.0",
     "jupyter>=1.1.1",
     "matplotlib>=3.10.9",
-    "nest-asyncio>=1.6.0",
     "numpy>=2.4.4",
     "optuna>=4.8.0",
     "pandas>=3.0.3",
     "scikit-learn>=1.8.0",
-    "scrapy>=2.15.2",
     "seaborn>=0.13.2",
     "shap>=0.51.0",
-    "spacy>=3.8.14",
     "statsmodels>=0.14.6",
     "xgboost>=3.2.0",
 ]
