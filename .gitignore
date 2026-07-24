@@ -27,7 +27,7 @@ env/
 #*.json
 #*.sqlite
 #*.db
-#data/
+data/
 
 # Scrapy
 .scrapy/
@@ -44,3 +44,4 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+07-neural-nets/data/
