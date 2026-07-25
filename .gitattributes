@@ -1,0 +1,4 @@
+*.ipynb linguist-vendored
+*.ipynb filter=nbstripout
+*.zpln filter=nbstripout
+*.ipynb diff=ipynb
