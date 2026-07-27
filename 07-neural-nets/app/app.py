@@ -42,6 +42,9 @@ model = make_model()
 model(np.zeros((1, 299, 299, 3)))
 
 with h5py.File(WEIGHTS_PATH, 'r') as f:
+    loaded_count = 0
+    total_count = 0
+
     def assign_if_match(weight, key_path):
         if weight.shape == f[key_path].shape:
             weight.assign(f[key_path][()])
@@ -52,32 +55,42 @@ with h5py.File(WEIGHTS_PATH, 'r') as f:
         if layer.name == 'xception':
             continue
         for w in layer.weights:
+            total_count += 1
             wname = w.name.split('/')[-1].split(':')[0]
-            # Search through the h5 file under model_weights/ for a matching tensor
             found = False
             for top_name in f['model_weights'].keys():
-                if top_name in ('xception', 'top_level_model_weights', 'input_layer'):
+                if top_name in ('xception', 'top_level_model_weights', 'input_layer_27'):
                     continue
-                candidate = f'model_weights/{top_name}/{top_name}/{wname}'
-                if candidate in f and assign_if_match(w, candidate):
-                    found = True
-                    break
-                candidate = f'model_weights/{top_name}/{wname}'
-                if candidate in f and assign_if_match(w, candidate):
-                    found = True
+                for fmt in (f'{top_name}/{top_name}/{wname}', f'{top_name}/{wname}'):
+                    candidate = f'model_weights/{fmt}'
+                    if candidate in f and assign_if_match(w, candidate):
+                        found = True
+                        loaded_count += 1
+                        break
+                if found:
                     break
             if not found:
                 print(f'WARNING: Could not load weights for {w.name}')
 
+    if loaded_count < total_count:
+        raise RuntimeError(
+            f'Only loaded {loaded_count}/{total_count} weight tensors from checkpoint. '
+            f'The model may produce incorrect results.'
+        )
+    print(f'Successfully loaded {loaded_count}/{total_count} weight tensors')
+
 
 def predict(image):
-    img = img_to_array(image.resize((299, 299)))
-    X = np.array([img])
-    X = preprocess_input(X)
-    preds = model.predict(X, verbose=0)
-    probs = tf.nn.softmax(preds[0]).numpy()
-    top_idx = int(np.argmax(probs))
-    return f"{classes[top_idx]}. probability is {probs[top_idx]:.0%}"
+    try:
+        img = img_to_array(image.resize((299, 299)))
+        X = np.array([img])
+        X = preprocess_input(X)
+        preds = model.predict(X, verbose=0)
+        probs = tf.nn.softmax(preds[0]).numpy()
+        top_idx = int(np.argmax(probs))
+        return f"{classes[top_idx]}. probability is {probs[top_idx]:.0%}"
+    except Exception as e:
+        return f"Error: {e}"
 
 
 iface = gr.Interface(
