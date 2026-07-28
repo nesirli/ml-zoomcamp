@@ -28,6 +28,7 @@ env/
 #*.sqlite
 #*.db
 *.h5
+!07-neural-nets/app/*.weights.h5
 data/
 07-neural-nets/data/
 
