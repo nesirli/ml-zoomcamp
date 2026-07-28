@@ -1,96 +1,106 @@
 import os
-import gradio as gr
 import h5py
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras.applications.xception import Xception, preprocess_input
-from tensorflow.keras.preprocessing.image import img_to_array
+import torch
+import torch.nn as nn
+import timm
+import gradio as gr
+from torchvision import transforms
+from PIL import Image
+
+try:
+    import spaces
+except ImportError:
+    spaces = None
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 WEIGHTS_PATH = os.path.join(APP_DIR, 'xception_v4_23_val_acc_0.886.weights.h5')
 
-base_model = Xception(
-    weights='imagenet',
-    include_top=False,
-    input_shape=(299, 299, 3)
-)
-base_model.trainable = False
-
-
-def make_model(learning_rate=0.001, inner_size=100, drop_rate=0.2):
-    inputs = keras.Input(shape=(299, 299, 3))
-    base = base_model(inputs, training=False)
-    pooling = keras.layers.GlobalAveragePooling2D()
-    vectors = pooling(base)
-    inner = keras.layers.Dense(inner_size, activation='relu')(vectors)
-    dropout = keras.layers.Dropout(drop_rate)(inner)
-    outputs = keras.layers.Dense(10)(dropout)
-    model = keras.Model(inputs=inputs, outputs=outputs)
-    model.compile(
-        optimizer=keras.optimizers.Adam(learning_rate=learning_rate),
-        loss=keras.losses.CategoricalCrossentropy(from_logits=True),
-        metrics=['accuracy'],
-    )
-    return model
-
-
 classes = ['dress', 'hat', 'longsleeve', 'outwear', 'pants',
            'shirt', 'shoes', 'shorts', 'skirt', 't-shirt']
 
-model = make_model()
-model(np.zeros((1, 299, 299, 3)))
 
-with h5py.File(WEIGHTS_PATH, 'r') as f:
-    loaded_count = 0
-    total_count = 0
-
-    def assign_if_match(weight, key_path):
-        if weight.shape == f[key_path].shape:
-            weight.assign(f[key_path][()])
-            return True
-        return False
-
-    for layer in model.layers:
-        if layer.name == 'xception':
-            continue
-        for w in layer.weights:
-            total_count += 1
-            wname = w.name.split('/')[-1].split(':')[0]
-            found = False
-            for top_name in f['model_weights'].keys():
-                if top_name in ('xception', 'top_level_model_weights', 'input_layer_27'):
-                    continue
-                for fmt in (f'{top_name}/{top_name}/{wname}', f'{top_name}/{wname}'):
-                    candidate = f'model_weights/{fmt}'
-                    if candidate in f and assign_if_match(w, candidate):
-                        found = True
-                        loaded_count += 1
-                        break
-                if found:
-                    break
-            if not found:
-                print(f'WARNING: Could not load weights for {w.name}')
-
-    if loaded_count < total_count:
-        raise RuntimeError(
-            f'Only loaded {loaded_count}/{total_count} weight tensors from checkpoint. '
-            f'The model may produce incorrect results.'
+class ClothingClassifier(nn.Module):
+    def __init__(self, num_classes=10, inner_size=100, drop_rate=0.2):
+        super().__init__()
+        self.backbone = timm.create_model(
+            'legacy_xception',
+            pretrained=True,
+            num_classes=0,  # remove classifier
         )
-    print(f'Successfully loaded {loaded_count}/{total_count} weight tensors')
+
+        self.head = nn.Sequential(
+            nn.Linear(2048, inner_size),
+            nn.ReLU(),
+            nn.Dropout(drop_rate),
+            nn.Linear(inner_size, num_classes),
+        )
+
+    def forward(self, x):
+        features = self.backbone(x)
+        return self.head(features)
 
 
-def predict(image):
-    try:
-        img = img_to_array(image.resize((299, 299)))
-        X = np.array([img])
-        X = preprocess_input(X)
-        preds = model.predict(X, verbose=0)
-        probs = tf.nn.softmax(preds[0]).numpy()
-        top_idx = int(np.argmax(probs))
-        return f"{classes[top_idx]}. probability is {probs[top_idx]:.0%}"
-    except Exception as e:
-        return f"Error: {e}"
+def load_head_weights(model, weights_path):
+    with h5py.File(weights_path, 'r') as f:
+        head_layers = [
+            ('head.0', ('dense_33',)),        # Linear(2048, 100)
+            ('head.3', ('dense_34',)),        # Linear(100, 10)
+        ]
+
+        loaded = 0
+        for layer_name, candidates in head_layers:
+            linear = model.get_submodule(layer_name)
+
+            for c in candidates:
+                w_path = f'model_weights/{c}/{c}/kernel'
+                b_path = f'model_weights/{c}/{c}/bias'
+                if w_path not in f or b_path not in f:
+                    continue
+
+                kernel = torch.from_numpy(f[w_path][()].T)  # NH to HN
+                bias = torch.from_numpy(f[b_path][()])
+
+                if kernel.shape == linear.weight.shape:
+                    linear.weight.data.copy_(kernel)
+                    linear.bias.data.copy_(bias)
+                    loaded += 1
+                    break
+
+        print(f'Loaded {loaded}/2 head layers')
+
+
+transform = transforms.Compose([
+    transforms.Resize((299, 299)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+])
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model = ClothingClassifier()
+load_head_weights(model, WEIGHTS_PATH)
+model.to(device)
+model.eval()
+
+
+def predict_fn(image):
+    if isinstance(image, dict):
+        image = Image.fromarray(image['composite'])
+
+    img_tensor = transform(image).unsqueeze(0).to(device)
+
+    with torch.no_grad():
+        logits = model(img_tensor)
+
+    probs = torch.softmax(logits, dim=1)[0].cpu()
+    top_idx = probs.argmax().item()
+    return f"{classes[top_idx]}. probability is {probs[top_idx]:.0%}"
+
+
+if spaces is not None:
+    predict = spaces.GPU(predict_fn)
+else:
+    predict = predict_fn
 
 
 iface = gr.Interface(
@@ -98,7 +108,7 @@ iface = gr.Interface(
     inputs=gr.Image(type='pil'),
     outputs=gr.Textbox(label="Prediction"),
     title="Clothing Classifier",
-    description="Upload a clothing image. Predicts: dress, hat, longsleeve, outwear, pants, shirt, shoes, shorts, skirt, t-shirt"
+    description="Upload a clothing image. Predicts: dress, hat, longsleeve, outwear, pants, shirt, shoes, shorts, skirt, t-shirt",
 )
 
 iface.launch()

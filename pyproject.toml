@@ -21,3 +21,10 @@ dependencies = [
     "tensorflow>=2.21.0",
     "xgboost>=3.2.0",
 ]
+
+[dependency-groups]
+dev = [
+    "timm>=1.0.28",
+    "torch>=2.13.0",
+    "torchvision>=0.28.0",
+]
